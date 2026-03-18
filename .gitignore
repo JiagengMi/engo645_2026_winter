@@ -1,0 +1,30 @@
+# Large data files - not tracked in git
+wildfire_datasets/
+Project Proposal.docx
+Project Proposal.pdf
+Project Requirements.pdf
+Project Summary.docx
+Project topic.pdf
+
+# LFS files
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
