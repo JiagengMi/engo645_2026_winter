@@ -384,6 +384,37 @@ def add_scaled_features(df: pd.DataFrame) -> pd.DataFrame:
 	return pd.concat([out, scaled], axis=1)
 
 
+def split_time_series_dataset(
+	df: pd.DataFrame,
+	train_ratio: float = 0.7,
+	val_ratio: float = 0.15,
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+	"""Chronological split without shuffling to avoid temporal leakage."""
+	if not 0 < train_ratio < 1:
+		raise ValueError("train_ratio must be in (0, 1)")
+	if not 0 <= val_ratio < 1:
+		raise ValueError("val_ratio must be in [0, 1)")
+	if train_ratio + val_ratio >= 1:
+		raise ValueError("train_ratio + val_ratio must be < 1")
+
+	df_sorted = df.sort_values("date").reset_index(drop=True)
+	n = len(df_sorted)
+	if n < 10:
+		raise ValueError("Not enough rows to create train/validation/test split.")
+
+	train_end = int(n * train_ratio)
+	val_end = int(n * (train_ratio + val_ratio))
+
+	train_df = df_sorted.iloc[:train_end].copy()
+	val_df = df_sorted.iloc[train_end:val_end].copy()
+	test_df = df_sorted.iloc[val_end:].copy()
+
+	if len(val_df) == 0 or len(test_df) == 0:
+		raise ValueError("Split produced empty validation or test set; adjust split ratios.")
+
+	return train_df, val_df, test_df
+
+
 def run_pipeline(
 	pm25_path: Path,
 	weather_hourly_dir: Path,
@@ -394,6 +425,8 @@ def run_pipeline(
 	upwind_sector_deg: float,
 	start_date: pd.Timestamp,
 	end_date: pd.Timestamp,
+	train_ratio: float,
+	val_ratio: float,
 ) -> None:
 	output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -419,6 +452,29 @@ def run_pipeline(
 	)
 	fire_daily = filter_daily_date_range(fire_daily, start_date, end_date)
 
+	# Keep a complete daily fire table so every output uses the same date range.
+	fire_date_spine = pd.DataFrame(
+		{"date": pd.date_range(pd.Timestamp(start_date), pd.Timestamp(end_date), freq="D").date}
+	)
+	fire_daily = fire_date_spine.merge(fire_daily, on="date", how="left")
+	for c in [
+		"fire_count",
+		"fire_frp_sum",
+		"fire_frp_mean",
+		"fire_mean_km",
+		"fire_frp_dist_weighted_sum",
+		"fire_smoke_transport_index",
+		"upwind_fire_count",
+		"upwind_fire_frp_sum",
+	]:
+		if c in fire_daily.columns:
+			fire_daily[c] = fire_daily[c].fillna(0)
+	for c in ["fire_nearest_km", "upwind_fire_nearest_km"]:
+		if c in fire_daily.columns:
+			max_seen = fire_daily[c].max(skipna=True)
+			fallback = float(max_seen) if pd.notna(max_seen) else radius_km
+			fire_daily[c] = fire_daily[c].fillna(fallback)
+
 	print("[5/5] Integrating all datasets and preparing model-ready table...")
 	master = build_master_daily_dataset(
 		pm25_daily,
@@ -430,6 +486,16 @@ def run_pipeline(
 	)
 	model_ready = make_model_ready(master, dropna_target=True)
 	model_ready_scaled = add_scaled_features(model_ready)
+	train_df, val_df, test_df = split_time_series_dataset(
+		model_ready,
+		train_ratio=train_ratio,
+		val_ratio=val_ratio,
+	)
+	train_scaled_df, val_scaled_df, test_scaled_df = split_time_series_dataset(
+		model_ready_scaled,
+		train_ratio=train_ratio,
+		val_ratio=val_ratio,
+	)
 
 	pm25_daily.to_csv(output_dir / "pm25_daily_clean.csv", index=False)
 	weather_daily.to_csv(output_dir / "weather_daily_features.csv", index=False)
@@ -438,10 +504,21 @@ def run_pipeline(
 	master.to_csv(output_dir / "master_daily_raw.csv", index=False)
 	model_ready.to_csv(output_dir / "master_daily_model_ready.csv", index=False)
 	model_ready_scaled.to_csv(output_dir / "master_daily_model_ready_scaled.csv", index=False)
+	train_df.to_csv(output_dir / "train_model_ready.csv", index=False)
+	val_df.to_csv(output_dir / "val_model_ready.csv", index=False)
+	test_df.to_csv(output_dir / "test_model_ready.csv", index=False)
+	train_scaled_df.to_csv(output_dir / "train_model_ready_scaled.csv", index=False)
+	val_scaled_df.to_csv(output_dir / "val_model_ready_scaled.csv", index=False)
+	test_scaled_df.to_csv(output_dir / "test_model_ready_scaled.csv", index=False)
 
 	print("\nPipeline complete.")
 	print(f"Rows in model-ready dataset: {len(model_ready)}")
 	print(f"Date range enforced: {pd.Timestamp(start_date).date()} to {pd.Timestamp(end_date).date()}")
+	print(
+		"Chronological split sizes: "
+		f"train={len(train_df)}, val={len(val_df)}, test={len(test_df)} "
+		f"(ratios: {train_ratio:.2f}/{val_ratio:.2f}/{1-train_ratio-val_ratio:.2f})"
+	)
 	print(f"Output folder: {output_dir}")
 
 
@@ -506,6 +583,18 @@ def parse_args() -> argparse.Namespace:
 		default="2025-04-01",
 		help="Inclusive end date (YYYY-MM-DD).",
 	)
+	parser.add_argument(
+		"--train-ratio",
+		type=float,
+		default=0.70,
+		help="Chronological train split ratio.",
+	)
+	parser.add_argument(
+		"--val-ratio",
+		type=float,
+		default=0.15,
+		help="Chronological validation split ratio.",
+	)
 	return parser.parse_args()
 
 
@@ -515,6 +604,8 @@ def main() -> None:
 	end_date = pd.Timestamp(args.end_date)
 	if end_date < start_date:
 		raise ValueError("--end-date must be on or after --start-date")
+	if args.train_ratio + args.val_ratio >= 1:
+		raise ValueError("--train-ratio + --val-ratio must be < 1")
 
 	run_pipeline(
 		pm25_path=args.pm25,
@@ -526,6 +617,8 @@ def main() -> None:
 		upwind_sector_deg=args.upwind_sector_deg,
 		start_date=start_date,
 		end_date=end_date,
+		train_ratio=args.train_ratio,
+		val_ratio=args.val_ratio,
 	)
 
 
