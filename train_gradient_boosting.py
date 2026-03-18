@@ -129,7 +129,7 @@ def train_with_lightgbm(x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndar
 
 def main() -> None:
     root = Path(__file__).resolve().parent
-    processed_dir = root / "wildfire_datasets" / "processed"
+    processed_dir = root / "processed"
     output_dir = processed_dir / "model_outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
 

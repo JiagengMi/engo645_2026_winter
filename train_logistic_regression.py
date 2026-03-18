@@ -69,7 +69,7 @@ def update_leaderboard(output_dir: Path, row: dict) -> None:
 
 def main() -> None:
     root = Path(__file__).resolve().parent
-    processed_dir = root / "wildfire_datasets" / "processed"
+    processed_dir = root / "processed"
     output_dir = processed_dir / "model_outputs"
     output_dir.mkdir(parents=True, exist_ok=True)
 

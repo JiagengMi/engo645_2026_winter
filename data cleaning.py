@@ -524,7 +524,7 @@ def run_pipeline(
 
 def parse_args() -> argparse.Namespace:
 	root = Path(__file__).resolve().parent
-	default_output = root / "wildfire_datasets" / "processed"
+	default_output = root / "processed"
 
 	parser = argparse.ArgumentParser(
 		description="Clean, integrate, and feature-engineer Calgary PM2.5 wildfire dataset."

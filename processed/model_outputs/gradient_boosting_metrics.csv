@@ -1,0 +1,2 @@
+model,pm25_threshold,best_params,val_f1_selected,accuracy,precision,recall,f1,roc_auc,pr_auc,trained_at_utc
+XGBoost,25.0,"n_estimators=300,max_depth=4,learning_rate=0.05,subsample=0.8,colsample_bytree=0.8",0.5,0.9774647887323944,0.8571428571428571,0.46153846153846156,0.6,0.9619883040935673,0.7061943692378474,2026-03-18T22:35:40.342165
