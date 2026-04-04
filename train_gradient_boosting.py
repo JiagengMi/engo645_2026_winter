@@ -7,6 +7,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
+from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
@@ -127,6 +128,33 @@ def train_with_lightgbm(x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndar
     return best_model, best_params, best_f1, "LightGBM"
 
 
+def train_with_sklearn_hgb(x_train: np.ndarray, y_train: np.ndarray, x_val: np.ndarray, y_val: np.ndarray):
+    candidates = [
+        {"learning_rate": 0.05, "max_depth": 6, "max_iter": 300, "min_samples_leaf": 20},
+        {"learning_rate": 0.03, "max_depth": 8, "max_iter": 500, "min_samples_leaf": 20},
+        {"learning_rate": 0.05, "max_depth": 10, "max_iter": 400, "min_samples_leaf": 30},
+    ]
+
+    best_model = None
+    best_params = candidates[0]
+    best_f1 = -1.0
+
+    for p in candidates:
+        model = HistGradientBoostingClassifier(
+            random_state=42,
+            **p,
+        )
+        model.fit(x_train, y_train)
+        val_pred = model.predict(x_val)
+        val_f1 = f1_score(y_val, val_pred, zero_division=0)
+        if val_f1 > best_f1:
+            best_f1 = val_f1
+            best_params = p
+            best_model = model
+
+    return best_model, best_params, best_f1, "SklearnHistGradientBoosting"
+
+
 def main() -> None:
     root = Path(__file__).resolve().parent
     processed_dir = root / "processed"
@@ -155,12 +183,20 @@ def main() -> None:
     try:
         model, best_params, best_val_f1, model_name = train_with_xgboost(x_train, y_train.to_numpy(), x_val, y_val.to_numpy())
     except Exception:
-        model, best_params, best_val_f1, model_name = train_with_lightgbm(
-            x_train,
-            y_train.to_numpy(),
-            x_val,
-            y_val.to_numpy(),
-        )
+        try:
+            model, best_params, best_val_f1, model_name = train_with_lightgbm(
+                x_train,
+                y_train.to_numpy(),
+                x_val,
+                y_val.to_numpy(),
+            )
+        except Exception:
+            model, best_params, best_val_f1, model_name = train_with_sklearn_hgb(
+                x_train,
+                y_train.to_numpy(),
+                x_val,
+                y_val.to_numpy(),
+            )
 
     x_trainval = np.vstack([x_train, x_val])
     y_trainval = np.concatenate([y_train.to_numpy(), y_val.to_numpy()])
@@ -176,13 +212,18 @@ def main() -> None:
             n_jobs=-1,
             **best_params,
         )
-    else:
+    elif model_name == "LightGBM":
         from lightgbm import LGBMClassifier
 
         final_model = LGBMClassifier(
             objective="binary",
             random_state=42,
             n_jobs=-1,
+            **best_params,
+        )
+    else:
+        final_model = HistGradientBoostingClassifier(
+            random_state=42,
             **best_params,
         )
 

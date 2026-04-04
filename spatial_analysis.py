@@ -20,13 +20,33 @@ apply_publication_style()
 
 
 def clean_fire_csv(fire_csv: Path, start_date: str, end_date: str) -> pd.DataFrame:
-    fire = pd.read_csv(fire_csv)
-    fire.columns = [c.strip().strip('"').lower() for c in fire.columns]
-
     required = ["latitude", "longitude", "acq_date", "acq_time", "frp"]
-    miss = [c for c in required if c not in fire.columns]
+
+    # Read header first so we can select only the required columns.
+    try:
+        header_cols = pd.read_csv(fire_csv, nrows=0).columns.tolist()
+    except pd.errors.ParserError:
+        header_cols = pd.read_csv(fire_csv, nrows=0, engine="python", on_bad_lines="skip").columns.tolist()
+
+    normalized_to_raw: dict[str, str] = {}
+    for raw in header_cols:
+        norm = str(raw).strip().strip('"').lower()
+        if norm not in normalized_to_raw:
+            normalized_to_raw[norm] = str(raw)
+
+    miss = [c for c in required if c not in normalized_to_raw]
     if miss:
         raise KeyError(f"Missing columns in fire CSV: {miss}")
+
+    usecols_raw = [normalized_to_raw[c] for c in required]
+
+    try:
+        fire = pd.read_csv(fire_csv, usecols=usecols_raw, dtype=str)
+    except pd.errors.ParserError:
+        # Some FIRMS CSV exports contain malformed rows; the Python engine with
+        # bad-line skipping is slower but more resilient.
+        fire = pd.read_csv(fire_csv, usecols=usecols_raw, dtype=str, engine="python", on_bad_lines="skip")
+    fire.columns = [c.strip().strip('"').lower() for c in fire.columns]
 
     fire["latitude"] = pd.to_numeric(fire["latitude"], errors="coerce")
     fire["longitude"] = pd.to_numeric(fire["longitude"], errors="coerce")

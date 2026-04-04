@@ -41,7 +41,7 @@ def infer_proba(model_artifact, x: pd.DataFrame, model_name: str) -> np.ndarray:
         cols = model_artifact["features"]
         return model.predict_proba(x[cols])[:, 1]
 
-    if model_name in {"XGBoost", "LightGBM", "GradientBoosting"}:
+    if model_name in {"XGBoost", "LightGBM", "GradientBoosting", "SklearnHistGradientBoosting"}:
         model = model_artifact["model"]
         imputer = model_artifact["imputer"]
         cols = model_artifact["features"]
