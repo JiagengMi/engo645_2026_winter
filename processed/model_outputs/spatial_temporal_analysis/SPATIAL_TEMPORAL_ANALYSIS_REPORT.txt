@@ -1,0 +1,54 @@
+
+================================================================================
+          PM2.5 SPATIAL-TEMPORAL ANALYSIS: KEY PATTERNS DISCOVERED
+                          Data Mining Application Report
+================================================================================
+
+ANALYSIS PERIOD
+   * Total Days Analyzed: 355
+   * Date Range: 2024-04-12 to 2025-04-01
+   * Duration: 354 days (~0 years)
+
+HIGH POLLUTION EVENTS (PM2.5 >= 25.0 ug/m3)
+   * Total High-Pollution Days: 13 days
+   * Percentage of Period: 3.66%
+   * Average PM2.5 on High-Pollution Days: 45.99 ug/m3
+   * Maximum PM2.5 Recorded: 134.00 ug/m3
+   * Minimum PM2.5 Recorded: 0.80 ug/m3
+
+TEMPORAL PATTERNS DISCOVERED
+
+   1. MONTHLY PATTERN (Peak Risk Month)
+      * Peak Month: Jul (5 high-pollution days)
+      * Safest Month: Jan (0 high-pollution days)
+
+   2. YEARLY PATTERN (Annual Variation)
+      * Peak Year: 2024 (13 events)
+      * Trend: [DECREASING] (from 13 to 0)
+
+   3. SEASONAL DISTRIBUTION
+      * Winter Avg: 7.61 ug/m3
+      * Spring Avg: 6.30 ug/m3
+      * Summer Avg: 12.75 ug/m3
+      * Fall Avg: 7.21 ug/m3
+
+KEY INSIGHTS FOR CALGARY
+   * Highest Risk Period: Jul - residents should be more cautious
+   * Temporal Pattern: Decreasing trend over years
+   * Frequency: On average, ~3.7% of days exceed safe PM2.5 levels
+
+DATA MINING APPLICATIONS DEMONSTRATED
+   [OK] Temporal Pattern Discovery: Identified high-risk months and seasonal variations
+   [OK] Anomaly Detection: Flagged unusual pollution events and their timing
+   [OK] Trend Analysis: Tracked yearly progression of pollution incidents
+   [OK] Risk Prediction: Machine learning model predicts high-pollution days
+   [OK] Geographic Contextualization: Pattern analysis for Calgary region
+
+MODEL PERFORMANCE
+   * Overall Accuracy: 98.03%
+   * Correct Predictions: 348/355 days
+   * Model Successfully Identifies High-Pollution Patterns
+
+================================================================================
+Generated: 2026-04-04 20:00:46
+Output Directory: processed\model_outputs\spatial_temporal_analysis

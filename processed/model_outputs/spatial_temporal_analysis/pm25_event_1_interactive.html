@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event #1 - PM2.5 Peak: 134.0 ug/m3</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></
+script>
+    <style>
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        .panel { position: fixed; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 1000; }
+        #title-panel { top: 10px; left: 50px; width: 360px; border: 3px solid darkred; }
+        #control-panel { top: 250px; left: 50px; width: 350px; border: 2px solid #333; }
+        #legend-panel { bottom: 50px; right: 50px; width: 280px; border: 2px solid grey; }
+        input[type="range"] { width: 100%; cursor: pointer; }
+        .day-info { margin: 8px 0; padding: 8px; background: #f0f0f0; border-left: 3px solid #FF8C00; font-size: 12px; }
+        table { font-size: 11px; border-collapse: collapse; margin-top: 10px; width: 100%; }
+        table td { padding: 3px; border: 1px solid #ddd; }
+        .peak { background-color: #ffe6e6; font-weight: bold; }
+        button { padding: 8px 15px; margin: 5px; cursor: pointer; background: #FF8C00; color: white; border: none; border-radius: 4px; font-weight: bold; }
+        button:hover { background: #DC143C; }
+        button.active { background: #DC143C; }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div id="title-panel" class="panel">
+        <p style="margin: 0; font-weight: bold; color: darkred; font-size: 16px;">Event #1 - PM2.5 Peak: 134.0 ug/m3</p>
+        <p style="margin: 8px 0; font-size: 13px;">
+            <span style="font-weight: bold;">Peak:</span> 134.0 ug/m3 on July 24, 2024</p>
+        <p style="margin: 5px 0; font-size: 13px;">
+            <span style="font-weight: bold;">Period:</span> Jul 21 to Jul 28, 2024</p>
+        <div id="current-day-info" class="day-info">
+            Loading...
+        </div>
+    </div>
+
+    <div id="control-panel" class="panel">
+        <p style="margin: 0 0 10px 0; font-weight: bold;">Time Slider: Day <span id="day-num">1</span>/8</p>
+        <input id="day-slider" type="range" min="1" max="8" value="1">
+        <div style="text-align: center; margin-top: 10px;">
+            <button onclick="previousDay()">← Previous</button>
+            <button onclick="nextDay()">Next →</button>
+        </div>
+    </div>
+
+    <div id="legend-panel" class="panel">
+        <p style="margin: 0 0 8px 0; font-weight: bold;">Legend</p>
+        <p style="margin: 2px 0; font-weight: bold; font-size: 11px;">Color = PM2.5 Level:</p>
+        <div style="font-size: 10px;">
+            <div><span style="display:inline-block; width:10px; height:10px; background:#90EE90; margin-right:3px;"></span>Low (<25)</div>
+            <div><span style="display:inline-block; width:10px; height:10px; background:#FF8C00; margin-right:3px;"></span>Moderate (25-35)</div>
+            <div><span style="display:inline-block; width:10px; height:10px; background:#FF4500; margin-right:3px;"></span>High (35-50)</div>
+            <div><span style="display:inline-block; width:10px; height:10px; background:#DC143C; margin-right:3px;"></span>Severe (50-100)</div>
+            <div><span style="display:inline-block; width:10px; height:10px; background:#8B0000; margin-right:3px;"></span>Critical (≥100)</div>
+        </div>
+        <hr style="margin: 5px 0;">
+        <p style="margin: 2px 0; font-weight: bold; font-size: 11px;">Wind Arrow:</p>
+        <div style="font-size: 10px;">
+            Blue = Weak | Green = Light<br>
+            Orange = Moderate | Red = Strong
+        </div>
+    </div>
+
+    <script>
+    var allDaysData = [{"date": "2024-07-21", "day_num": 1, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-07-22", "day_num": 2, "pm25": 34.4, "wind_speed": 3.3941859401568224, "wind_direction": 150.54474096411494, "is_peak": false, "major_axis": 92.15199926827893, "minor_axis": 54.788800439032634, "direction": 330.5447409641149, "color": "#FF8C00", "wind_color": "orange", "fire": "Yes"}, {"date": "2024-07-23", "day_num": 3, "pm25": 50.3, "wind_speed": 3.158760824547608, "wind_direction": 165.50472911561337, "is_peak": false, "major_axis": 131.58760824547608, "minor_axis": 81.04743505271436, "direction": 345.5047291156134, "color": "#DC143C", "wind_color": "orange", "fire": "Yes"}, {"date": "2024-07-24", "day_num": 4, "pm25": 134.0, "wind_speed": 2.5321765204540347, "wind_direction": 45.65921962622178, "is_peak": true, "major_axis": 125.32176520454034, "minor_axis": 84.80694087727579, "direction": 225.65921962622178, "color": "#8B0000", "wind_color": "green", "fire": "Yes"}, {"date": "2024-07-25", "day_num": 5, "pm25": 44.9, "wind_speed": 3.515596413983985, "wind_direction": 293.68693426455707, "is_peak": false, "major_axis": 121.37005579757617, "minor_axis": 70.85796652145429, "direction": 113.68693426455707, "color": "#FF4500", "wind_color": "orange", "fire": "Yes"}, {"date": "2024-07-26", "day_num": 6, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-07-27", "day_num": 7, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-07-28", "day_num": 8, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}];
+    var map = L.map('map').setView([51.0447, -114.0719], 7);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/positron/{z}/{x}/{y}.png', {
+        attribution: '&copy; CartoDB'
+    }).addTo(map);
+
+    var drawnLayers = L.featureGroup();
+    map.addLayer(drawnLayers);
+
+    // 添加Calgary标记
+    L.circleMarker([51.0447, -114.0719], {
+        radius: 12,
+        color: 'blue',
+        fillColor: 'blue',
+        fillOpacity: 0.9,
+        weight: 3
+    }).bindPopup('<b>Calgary City Center</b>').addTo(map);
+
+    function drawEllipse(day) {
+        drawnLayers.clearLayers();
+
+        // 椭圆参数
+        var majorAxis = day.major_axis;
+        var minorAxis = day.minor_axis;
+        var direction = day.direction * Math.PI / 180;
+
+        // 生成椭圆点
+        var points = [];
+        for (var i = 0; i < 65; i++) {
+            var angle = (i / 64) * 2 * Math.PI;
+            var x = majorAxis * Math.cos(angle);
+            var y = minorAxis * Math.sin(angle);
+
+            var xRot = x * Math.cos(direction) - y * Math.sin(direction);
+            var yRot = x * Math.sin(direction) + y * Math.cos(direction);
+
+            var latOff = yRot / 111.0;
+            var lonOff = xRot / (111.0 * Math.cos(51.0447 * Math.PI / 180));
+
+            points.push([51.0447 + latOff, -114.0719 + lonOff]);
+        }
+
+        // 绘制椭圆多边形
+        L.polygon(points, {
+            color: day.color,
+            weight: 2,
+            fillColor: day.color,
+            fillOpacity: 0.5
+        }).addTo(drawnLayers);
+
+        // 绘制风向箭头
+        var windDir = (day.wind_direction + 180) * Math.PI / 180;
+        var arrowLen = 0.05 + day.wind_speed * 0.04;
+        var endLat = 51.0447 + arrowLen * Math.cos(windDir);
+        var endLon = -114.0719 + arrowLen * Math.sin(windDir) / Math.cos(51.0447 * Math.PI / 180);
+
+        // 箭头杆
+        L.polyline([[51.0447, -114.0719], [endLat, endLon]], {
+            color: day.wind_color,
+            weight: day.wind_speed < 3 ? 2 : (day.wind_speed < 4 ? 3 : 4),
+            opacity: 0.8
+        }).addTo(drawnLayers);
+
+        // 更新信息
+        var status = day.is_peak ? '<span style="color: red; font-weight: bold;">★ PEAK DAY ★</span>' : '';
+        document.getElementById('current-day-info').innerHTML =
+            'Day ' + day.day_num + '/8: ' + day.date + '<br>' +
+            'PM2.5: ' + day.pm25.toFixed(1) + ' ug/m3  ' + status + '<br>' +
+            'Wind: ' + day.wind_speed.toFixed(1) + ' m/s from ' + day.wind_direction.toFixed(0) + '°<br>' +
+            'Impact Radius: ' + day.major_axis.toFixed(0) + ' km';
+    }
+
+    function updateDay() {
+        var slider = document.getElementById('day-slider');
+        var day = allDaysData[parseInt(slider.value) - 1];
+        document.getElementById('day-num').textContent = slider.value;
+        drawEllipse(day);
+    }
+
+    function previousDay() {
+        var slider = document.getElementById('day-slider');
+        if (parseInt(slider.value) > 1) {
+            slider.value = parseInt(slider.value) - 1;
+            updateDay();
+        }
+    }
+
+    function nextDay() {
+        var slider = document.getElementById('day-slider');
+        if (parseInt(slider.value) < 8) {
+            slider.value = parseInt(slider.value) + 1;
+            updateDay();
+        }
+    }
+
+    document.getElementById('day-slider').addEventListener('input', updateDay);
+
+    // 初始化
+    updateDay();
+    </script>
+</body>
+</html>
