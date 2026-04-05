@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event #2 - PM2.5 Peak: 53.5 ug/m3</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></
-script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
@@ -68,8 +67,11 @@ script>
     <script>
     var allDaysData = [{"date": "2024-08-12", "day_num": 1, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-08-13", "day_num": 2, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-08-14", "day_num": 3, "pm25": 33.7, "wind_speed": 1.9079340751605456, "wind_direction": 314.2644662544976, "is_peak": false, "major_axis": 80.25947566658208, "minor_axis": 59.68431460005076, "direction": 134.26446625449762, "color": "#FF8C00", "wind_color": "blue", "fire": "Yes"}, {"date": "2024-08-15", "day_num": 4, "pm25": 53.5, "wind_speed": 2.0316171193577, "wind_direction": 121.13520210431544, "is_peak": true, "major_axis": 120.316171193577, "minor_axis": 87.8102972838538, "direction": 301.13520210431545, "color": "#DC143C", "wind_color": "green", "fire": "Yes"}, {"date": "2024-08-16", "day_num": 5, "pm25": 41.0, "wind_speed": 2.128817407835981, "wind_direction": 129.16694354574395, "is_peak": false, "major_axis": 99.45630274425504, "minor_axis": 71.52621835344698, "direction": 309.16694354574395, "color": "#FF4500", "wind_color": "green", "fire": "Yes"}, {"date": "2024-08-17", "day_num": 6, "pm25": 26.9, "wind_speed": 1.2929246906008671, "wind_direction": 312.409307744755, "is_peak": false, "major_axis": 60.755934835432654, "minor_axis": 49.62643909874039, "direction": 132.40930774475498, "color": "#FF8C00", "wind_color": "blue", "fire": "Yes"}, {"date": "2024-08-18", "day_num": 7, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-08-19", "day_num": 8, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}];
     var map = L.map('map').setView([51.0447, -114.0719], 7);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/positron/{z}/{x}/{y}.png', {
-        attribution: '&copy; CartoDB'
+
+    // 使用 CartoDB light_all 底图（与 pm25_detailed_event_1_extended.html 相同）
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CartoDB',
+        maxZoom: 18
     }).addTo(map);
 
     var drawnLayers = L.featureGroup();
@@ -83,6 +85,24 @@ script>
         fillOpacity: 0.9,
         weight: 3
     }).bindPopup('<b>Calgary City Center</b>').addTo(map);
+
+    // 加载Calgary实际城市边界 GeoJSON
+    fetch('../../../wildfire_datasets/City_Boundary_20260404.geojson')
+        .then(response => response.json())
+        .then(data => {
+            L.geoJSON(data, {
+                style: {
+                    color: '#FF0000',
+                    weight: 3,
+                    opacity: 0.8,
+                    fill: false
+                },
+                onEachFeature: function(feature, layer) {
+                    layer.bindPopup('<b>Calgary City Boundary</b>');
+                }
+            }).addTo(map);
+        })
+        .catch(error => console.error('Error loading boundary:', error));
 
     function drawEllipse(day) {
         drawnLayers.clearLayers();

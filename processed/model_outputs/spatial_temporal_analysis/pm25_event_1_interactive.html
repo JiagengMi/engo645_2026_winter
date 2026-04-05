@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Event #1 - PM2.5 Peak: 134.0 ug/m3</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></
-script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
         body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
@@ -68,8 +67,11 @@ script>
     <script>
     var allDaysData = [{"date": "2024-07-21", "day_num": 1, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-07-22", "day_num": 2, "pm25": 34.4, "wind_speed": 3.3941859401568224, "wind_direction": 150.54474096411494, "is_peak": false, "major_axis": 92.15199926827893, "minor_axis": 54.788800439032634, "direction": 330.5447409641149, "color": "#FF8C00", "wind_color": "orange", "fire": "Yes"}, {"date": "2024-07-23", "day_num": 3, "pm25": 50.3, "wind_speed": 3.158760824547608, "wind_direction": 165.50472911561337, "is_peak": false, "major_axis": 131.58760824547608, "minor_axis": 81.04743505271436, "direction": 345.5047291156134, "color": "#DC143C", "wind_color": "orange", "fire": "Yes"}, {"date": "2024-07-24", "day_num": 4, "pm25": 134.0, "wind_speed": 2.5321765204540347, "wind_direction": 45.65921962622178, "is_peak": true, "major_axis": 125.32176520454034, "minor_axis": 84.80694087727579, "direction": 225.65921962622178, "color": "#8B0000", "wind_color": "green", "fire": "Yes"}, {"date": "2024-07-25", "day_num": 5, "pm25": 44.9, "wind_speed": 3.515596413983985, "wind_direction": 293.68693426455707, "is_peak": false, "major_axis": 121.37005579757617, "minor_axis": 70.85796652145429, "direction": 113.68693426455707, "color": "#FF4500", "wind_color": "orange", "fire": "Yes"}, {"date": "2024-07-26", "day_num": 6, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-07-27", "day_num": 7, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}, {"date": "2024-07-28", "day_num": 8, "pm25": 15.0, "wind_speed": 2.5, "wind_direction": 180.0, "is_peak": false, "major_axis": 37.5, "minor_axis": 25.5, "direction": 0.0, "color": "#90EE90", "wind_color": "green", "fire": "No"}];
     var map = L.map('map').setView([51.0447, -114.0719], 7);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/positron/{z}/{x}/{y}.png', {
-        attribution: '&copy; CartoDB'
+
+    // 使用 CartoDB light_all 底图（与 pm25_detailed_event_1_extended.html 相同）
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; CartoDB',
+        maxZoom: 18
     }).addTo(map);
 
     var drawnLayers = L.featureGroup();
@@ -83,6 +85,24 @@ script>
         fillOpacity: 0.9,
         weight: 3
     }).bindPopup('<b>Calgary City Center</b>').addTo(map);
+
+    // 加载Calgary实际城市边界 GeoJSON
+    fetch('../../../wildfire_datasets/City_Boundary_20260404.geojson')
+        .then(response => response.json())
+        .then(data => {
+            L.geoJSON(data, {
+                style: {
+                    color: '#FF0000',
+                    weight: 3,
+                    opacity: 0.8,
+                    fill: false
+                },
+                onEachFeature: function(feature, layer) {
+                    layer.bindPopup('<b>Calgary City Boundary</b>');
+                }
+            }).addTo(map);
+        })
+        .catch(error => console.error('Error loading boundary:', error));
 
     function drawEllipse(day) {
         drawnLayers.clearLayers();

@@ -377,8 +377,7 @@ def create_simple_time_slider_map(test_data: pd.DataFrame, start_date, end_date,
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{event_name}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></
-script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <style>
         body {{ margin: 0; padding: 0; font-family: Arial, sans-serif; }}
         #map {{ position: absolute; top: 0; bottom: 0; width: 100%; }}
@@ -440,8 +439,11 @@ script>
     <script>
     var allDaysData = {json.dumps(all_days_data)};
     var map = L.map('map').setView([{CALGARY_LAT}, {CALGARY_LON}], 7);
-    L.tileLayer('https://{{s}}.basemaps.cartocdn.com/positron/{{z}}/{{x}}/{{y}}.png', {{
-        attribution: '&copy; CartoDB'
+
+    // 使用 CartoDB light_all 底图（与 pm25_detailed_event_1_extended.html 相同）
+    L.tileLayer('https://{{s}}.basemaps.cartocdn.com/light_all/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+        attribution: '&copy; CartoDB',
+        maxZoom: 18
     }}).addTo(map);
 
     var drawnLayers = L.featureGroup();
@@ -455,6 +457,24 @@ script>
         fillOpacity: 0.9,
         weight: 3
     }}).bindPopup('<b>Calgary City Center</b>').addTo(map);
+
+    // 加载Calgary实际城市边界 GeoJSON
+    fetch('../../../wildfire_datasets/City_Boundary_20260404.geojson')
+        .then(response => response.json())
+        .then(data => {{
+            L.geoJSON(data, {{
+                style: {{
+                    color: '#FF0000',
+                    weight: 3,
+                    opacity: 0.8,
+                    fill: false
+                }},
+                onEachFeature: function(feature, layer) {{
+                    layer.bindPopup('<b>Calgary City Boundary</b>');
+                }}
+            }}).addTo(map);
+        }})
+        .catch(error => console.error('Error loading boundary:', error));
 
     function drawEllipse(day) {{
         drawnLayers.clearLayers();
