@@ -459,13 +459,13 @@ def create_simple_time_slider_map(test_data: pd.DataFrame, start_date, end_date,
     }}).bindPopup('<b>Calgary City Center</b>').addTo(map);
 
     // 加载Calgary实际城市边界 GeoJSON
-    fetch('../../../wildfire_datasets/City_Boundary_20260404.geojson')
+    fetch('./City_Boundary_20260404.geojson')
         .then(response => response.json())
         .then(data => {{
             L.geoJSON(data, {{
                 style: {{
                     color: '#FF0000',
-                    weight: 3,
+                    weight: 1.5,
                     opacity: 0.8,
                     fill: false
                 }},
