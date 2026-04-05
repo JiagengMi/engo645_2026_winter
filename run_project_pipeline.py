@@ -107,8 +107,8 @@ def ensure_required_paths(root: Path, args: argparse.Namespace) -> None:
     if args.skip_train and (not args.skip_eval or not args.skip_predict):
         model_dir = processed / "model_outputs"
         expect_file(model_dir / "logistic_regression_model.joblib")
-        expect_file(model_dir / "random_forest_model.joblib")
-        expect_file(model_dir / "gradient_boosting_model.joblib")
+        expect_file(model_dir / "random_forest_improved_model.joblib")
+        expect_file(model_dir / "gradient_boosting_improved_model.joblib")
 
     if missing:
         print("\nMissing required files/directories for selected steps:")
@@ -162,11 +162,11 @@ def main() -> None:
 
     if not args.skip_train:
         run_step("Train Logistic Regression", root / "train_logistic_regression.py")
-        run_step("Train Random Forest", root / "train_random_forest.py")
-        run_step("Train Gradient Boosting", root / "train_gradient_boosting.py")
+        run_step("Train Random Forest (Improved)", root / "train_random_forest_improved.py")
+        run_step("Train Gradient Boosting (Improved)", root / "train_gradient_boosting_improved.py")
 
     if not args.skip_eval:
-        run_step("Evaluation and Visualization", root / "evaluate_models.py")
+        run_step("Final Model Evaluation (CV + Test)", root / "evaluate_final_models.py")
 
     if not args.skip_predict:
         run_step("Prediction for Next Year", root / "predict_next_year.py")
