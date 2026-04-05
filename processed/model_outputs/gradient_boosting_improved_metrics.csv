@@ -1,0 +1,2 @@
+model,model_version,pm25_threshold,best_params,val_f1_selected,accuracy,precision,recall,f1,roc_auc,pr_auc,trained_at_utc
+HistGradientBoosting_Improved_V1,l2_regularized,25.0,"learning_rate=0.02,max_depth=4,max_iter=500,l2_regularization=0.01",0.4888888888888889,0.9802816901408451,0.875,0.5384615384615384,0.6666666666666666,0.9583895636527217,0.6691556432315102,2026-04-05T01:27:58.872680

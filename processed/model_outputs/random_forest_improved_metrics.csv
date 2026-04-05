@@ -1,0 +1,2 @@
+model,model_version,pm25_threshold,best_params,val_f1_selected,accuracy,precision,recall,f1,roc_auc,pr_auc,trained_at_utc
+RandomForest_Improved_V1,regularized,25.0,"n_estimators=300,max_depth=10,min_samples_leaf=30,min_samples_split=60",0.4927536231884058,0.952112676056338,0.4166666666666667,0.7692307692307693,0.5405405405405406,0.9556905083220872,0.6004117227801438,2026-04-05T01:27:46.525534

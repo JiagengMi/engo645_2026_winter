@@ -149,7 +149,7 @@ def main() -> None:
         if val_f1 > best_val_f1:
             best_val_f1 = val_f1
             best_params = params
-            print(f"  ✓ New best!")
+            print(f"  [NEW BEST]")
 
     print(f"\nBest Config Selected: {best_params}")
     print(f"Best Val F1: {best_val_f1:.4f}")
